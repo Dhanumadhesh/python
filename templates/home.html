@@ -1,3 +1,236 @@
-<h1>
-    Hello world
-</h1>
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mental Health Predictor</title><style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: Arial;
+}
+
+.page{
+    display:none;
+    height:100vh;
+    width:100%;
+    justify-content:center;
+    align-items:center;
+}
+
+.page.active{
+    display:flex;
+}
+
+/* 🌈 Background Gradients */
+#login-page{
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+#register-page{
+    background: linear-gradient(135deg, #ff758c, #ff7eb3);
+}
+
+#feature-page{
+    background: linear-gradient(135deg, #43cea2, #185a9d);
+}
+
+#result-page{
+    background: linear-gradient(135deg, #f7971e, #ffd200);
+}
+
+/* Card UI */
+.container{
+    background: rgba(255,255,255,0.95);
+    padding:25px;
+    border-radius:15px;
+    width:350px;
+    text-align:center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* Inputs */
+input{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border-radius:8px;
+    border:1px solid #ccc;
+}
+
+/* Button */
+button{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    background:#6C63FF;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#574fd6;
+    transform: scale(1.05);
+    transition: 0.3s;
+}
+
+/* Link */
+.link{
+    color:blue;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+/* Result */
+.result-card{
+    padding:20px;
+    border-radius:10px;
+    font-weight:bold;
+}
+
+.good{background:green;color:white;}
+.poor{background:red;color:white;}
+
+#score, #mental-health{
+    font-size:22px;
+}
+
+</style></head><body><!-- LOGIN --><div id="login-page" class="page active">
+    <div class="container">
+        <h2>Login</h2>
+        <input type="text" id="login-user" placeholder="Username">
+        <input type="password" id="login-pass" placeholder="Password">
+        <button onclick="login()">Login</button>    <div class="link" onclick="showRegister()">New user? Register</div>
+    <div id="login-error" style="color:red;"></div>
+</div>
+
+</div><!-- REGISTER --><div id="register-page" class="page">
+    <div class="container">
+        <h2>Register</h2>
+        <input type="text" id="reg-user" placeholder="Create Username">
+        <input type="password" id="reg-pass" placeholder="Create Password">
+        <button onclick="register()">Register</button>    <div class="link" onclick="showLogin()">Back to Login</div>
+</div>
+
+</div><!-- PREDICTION --><div id="feature-page" class="page">
+    <div class="container">
+        <h2>Enter Details</h2>    <input type="number" id="Aca_stage" placeholder="Study Level (1-5)">
+    <input type="number" id="Peer_press" placeholder="Peer Pressure (1-5)">
+    <input type="number" id="Aca_press_home" placeholder="Home Pressure (1-5)">
+    <input type="number" id="Study_environment" placeholder="Study Environment (1-5)">
+    <input type="number" id="Coping_strategy" placeholder="Coping Ability (1-5)">
+    <input type="number" id="bad_habits" placeholder="Bad Habits (0-5)">
+    <input type="number" id="Aca_comp_rate" placeholder="Completion Rate (1-5)">
+
+    <button onclick="predict()">Predict</button>
+</div>
+
+</div><!-- RESULT --><div id="result-page" class="page">
+    <div class="container">
+        <h2>Result</h2>    <div id="result-box" class="result-card">
+        <div id="score"></div>
+        <div id="mental-health"></div>
+        <div id="suggestion"></div>
+    </div>
+
+    <button onclick="back()">Back</button>
+</div>
+
+</div><script>
+
+let users = {};
+
+/* PAGE SWITCH */
+function showRegister(){
+    document.getElementById("login-page").classList.remove("active");
+    document.getElementById("register-page").classList.add("active");
+}
+
+function showLogin(){
+    document.getElementById("register-page").classList.remove("active");
+    document.getElementById("login-page").classList.add("active");
+}
+
+/* REGISTER */
+function register(){
+    let username = document.getElementById("reg-user").value;
+    let password = document.getElementById("reg-pass").value;
+
+    if(username === "" || password === ""){
+        alert("Fill all fields!");
+        return;
+    }
+
+    users[username] = password;
+    alert("Registered Successfully!");
+    showLogin();
+}
+
+/* LOGIN */
+function login(){
+    let username = document.getElementById("login-user").value;
+    let password = document.getElementById("login-pass").value;
+
+    if(users[username] === password){
+        document.getElementById("login-page").classList.remove("active");
+        document.getElementById("feature-page").classList.add("active");
+    } else {
+        document.getElementById("login-error").innerText = "Invalid username or password!";
+    }
+}
+
+/* PREDICT */
+function predict(){
+
+    const data = {
+        Aca_stage: +document.getElementById("Aca_stage").value,
+        Peer_press: +document.getElementById("Peer_press").value,
+        Aca_press_home: +document.getElementById("Aca_press_home").value,
+        Study_environment: +document.getElementById("Study_environment").value,
+        Coping_strategy: +document.getElementById("Coping_strategy").value,
+        bad_habits: +document.getElementById("bad_habits").value,
+        Aca_comp_rate: +document.getElementById("Aca_comp_rate").value
+    };
+
+    fetch('/predict_api', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({data})
+    })
+    .then(response => response.json())
+    .then(result => {
+
+        document.getElementById("score").innerText =
+            "Stress Score: " + result.stress_score.toFixed(2);
+
+        document.getElementById("mental-health").innerText =
+            "Mental Health: " + result.mental_health;
+
+        if(result.mental_health === "Good"){
+            document.getElementById("result-box").className = "result-card good";
+            document.getElementById("suggestion").innerText =
+                "Excellent! Keep maintaining your lifestyle 👍";
+        } else {
+            document.getElementById("result-box").className = "result-card poor";
+            document.getElementById("suggestion").innerText =
+                "Reduce stress, take rest, talk to someone ❤️";
+        }
+
+        document.getElementById("feature-page").classList.remove("active");
+        document.getElementById("result-page").classList.add("active");
+
+    })
+    .catch(error => alert("Error: " + error));
+}
+
+/* BACK */
+function back(){
+    document.getElementById("result-page").classList.remove("active");
+    document.getElementById("feature-page").classList.add("active");
+}
+
+</script></body>
+</html>
